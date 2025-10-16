@@ -2,9 +2,9 @@
 
 ## 1. Overview
 
-`ElbowSig` implements a **generalized Elbow Significance Method** for determining the optimal number of clusters in unsupervised learning models.
+`ElbowSig` implements an **Elbow Significance Method** for determining the optimal number of clusters in unsupervised learning models.
 
-It provides a unified framework to compute an **inertia-like heterogeneity measure** and assess the **statistical significance** of the “elbow” (change in slope) using permutation testing.
+It provides a unified framework to compute an **inertia-like heterogeneity measure** and assess the **statistical significance** of the “elbow” (change in slope) comparing the elbow for observations with that expected for unstructured reference data (null hypothesis).
 
 The implementation supports multiple popular clustering algorithms:
 - **K-Means**
@@ -18,13 +18,13 @@ Other algorithms can be implemented by the user defining an appropriate function
 
 ## 2. Features
 
-- Computes heterogeneity (inertia-like measure) across cluster numbers \(k = 1, \dots, k_{\max}\)
+- Computes heterogeneity $H_k$ (inertia-like measure) across cluster numbers $k = 1, \dots, k_{\max}$
 - Performs **randomization-based significance testing** of the elbow
-- Returns percentile thresholds and p-values
+- Returns percentile thresholds, p-values, and other related quantities as a function of $k$
 - Plots three diagnostics:
-  1. Heterogeneity vs. \(k\)
-  2. Slope change (Δk) vs. \(k\)
-  3. p-values vs. \(k\)
+  1. Heterogeneity vs. $k$
+  2. Slope change ($\delta k$) vs. $k$
+  3. Empirical p-values vs. $k$
 - Flexible: can plug in custom heterogeneity functions
 
 ---
@@ -71,7 +71,7 @@ Computes total within-cluster heterogeneity for Agglomerative Clustering.
 
 - `FCM_Heterogeneity(X, k, random_state=42, pars=[2, 0.005, 1000])`
 
-Computes fuzzy clustering objective function $J_m$, analogous to inertia in hard partitions.
+Computes fuzzy clustering objective function analogous to inertia in hard partitions.
 
 | Parameter | Description                           |
 | --------- | ------------------------------------- |
@@ -80,7 +80,7 @@ Computes fuzzy clustering objective function $J_m$, analogous to inertia in hard
 | `pars[2]` | max iterations (default=1000)         |
 
 **Returns:**
-`float` – $J_m$
+`float` – Inertia-like heterogeneity measure accounting for the membership of each observation to each cluster.
 
 - `GMM_Heterogeneity(X, k, random_state=42, pars=['full'])`
 
@@ -91,7 +91,7 @@ Computes negative log-likelihood ($-ln L$) for a Gaussian Mixture Model.
 | `pars[0]` | covariance type: `'full'`, `'tied'`, `'diag'`, `'spherical'` |
 
 **Returns:**
-float – total negative log-likelihood
+float – negative log-likelihood
 
 --
 
