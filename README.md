@@ -6,11 +6,13 @@
 
 It provides a unified framework to compute an **inertia-like heterogeneity measure** and assess the **statistical significance** of the “elbow” (change in slope) using permutation testing.
 
-The implementation supports multiple clustering algorithms:
+The implementation supports multiple popular clustering algorithms:
 - **K-Means**
 - **Agglomerative Clustering**
 - **Fuzzy C-Means (FCM)**
 - **Gaussian Mixture Models (GMM)**
+
+Other algorithms can be implemented by the user defining an appropriate function to calculate the heterogeneity of a clustering. 
 
 ---
 
