@@ -6,7 +6,7 @@
 
 It provides a unified framework to compute an **inertia-like heterogeneity measure** and assess the **statistical significance** of the “elbow” (change in slope) comparing the elbow for observations with that expected for unstructured reference data (null hypothesis).
 
-The implementation supports multiple popular clustering algorithms:
+The implementation supports multiple popular clustering algorithms (option `heterogeneity_func` below):
 - **K-Means**
 - **Agglomerative Clustering**
 - **Fuzzy C-Means (FCM)**
@@ -110,27 +110,30 @@ Computes heterogeneity measures, slopes, and slope changes for $k=1,2,\dots,k_{\
 
 ### Elbow Statistic Analysis
 
-`Elbow_significance_general(X, kmax=10, nr=100, alpha=0.05, plotYN=True, random_state=42, heterogeneity_func=FCM_Heterogeneity, pars=[2, 0.005, 1000], qsig=20, fsel=0.5)`
+` Elbow_significance_general(X, kmax=10, nr=100, qperk=0.05, qFDR=0.05, plotYN=True, random_state=42, heterogeneity_func=FCM_Heterogeneity, pars=[2, 0.005, 1000], nsig=20, fsel=0.5, random_data_func=data_random)`
 
 Performs the full elbow significance test to determine the statistically significant number(s) of clusters ($K$).
 
 1.  Computes the heterogeneity curve for the original data.
 2.  Generates uniformly distributed unstructured datasets (`nr` times).
 3.  Calculates slope-change distributions ($\delta_k$ values) under the null hypothesis.
-4.  Computes an adaptive significance threshold ($p_{\text{sig}}$) based on $q_{\text{sig}}$ random selection of a fraction `fsel` of the `nr` reference datasets.
-5.  Calculates percentile thresholds and empirical p-values.
-6.  Identifies all $K$ values whose $\delta_k$ is statistically significant.
+4.  Calculates percentile thresholds and empirical p-values.
+5.  Computes an adaptive significance threshold ($p_{\text{sig}}$) based on $q_{\text{sig}}$ random selection of a fraction `fsel` of the `nr` reference datasets.
+6.  Controls global false discovery rate (FDR) associated with test at different $k$ using Benjamini-Hochberg method.
+8.  Identifies all $K$ values whose $\delta_k$ is statistically significant.
 
 | Parameter | Description |
 | :--- | :--- |
-| `kmax` | Maximum number of clusters to test. |
-| `nr` | Number of random permutations used to build the null distribution. |
-| `alpha` | Significance level used for the final $p_{\text{sig}}$ threshold (e.g., 0.05). |
-| `plotYN` | Boolean flag to control plotting of results (default `True`). |
-| `heterogeneity_func` | Heterogeneity measure function to use (e.g., `Kmeans_Heterogeneity`). |
-| `pars` | Parameters passed to the heterogeneity function. |
-| `qsig` | Number of repetitions for the bootstrapped threshold calculation ($p_{\text{sig}}$). |
+| `kmax` (default: 10) | Maximum number of clusters to test. |
+| `nr` (default: 100) | Number of random permutations used to build the null distribution. |
+| `qperk` (default: 0.05) | The significance level ($q_1$) for the per-scale threshold $p_{\text{sig}}$. |
+| `qFDR` (default: 0.05) | The target level ($q_2$) for False Discovery Rate (FDR) control using Benjamini-Hochberg (BH). |
+| `plotYN` (default: `True`) | Boolean flag to control plotting of results (default `True`). |
+| `heterogeneity_func` | Heterogeneity measure function to use (e.g., `Kmeans_Heterogeneity`). Available modes: `Agglomerative_Heterogeneity`, `Kmeans_Heterogeneity`, `FCM_Heterogeneity`, `GMM_Heterogeneity`  |
+| `pars` | Parameters passed to the heterogeneity function. This depends on the clustering method given in `heterogeneity_func`. Examples: `['euclidean', 'ward']` for `Agglomerative_Heterogeneity`. `[10]`, number of initializations for `Kmeans_Heterogeneity`.  `[2, 0.005, 1000]`, fuzziness, error tolerance, max iterations for `Elbow_significance_general`. `['full']`, covariance type for `GMM_Heterogeneity`.  |
+| `nsig` | Parameter for the adaptive $p$-value threshold calculation (number of runs used to determine the threshold $p_{\text{sig}}$). |
 | `fsel` | Fraction of realizations to sample when calculating the adaptive threshold ($p_{\text{sig}}$). |
+| `random_data_func` | The function used to generate the unstructured null hypothesis data (e.g., data_random_pca_aligned for a PCA-aligned null). |
 
 **Returns:**
 A dictionary containing:
@@ -142,10 +145,11 @@ A dictionary containing:
 | `'slope_change'` | Slope change statistics ($\delta_k$) for the original data. |
 | `'percentile'` | $100 \times (1 - p_{\text{sig}})$ percentile of randomized slope changes. |
 | `'p_values'` | Empirical p-values for each $K$. |
+| `'p_values_corrected'` | $p$-values corrected for multiple comparisons (all tested $k$ values) using the Benjamini-Hochberg procedure. |
 | `'k_optimal'` | List of all statistically significant $K$ values. Returns `[1]` if no significant clusters are found. |
 | `'slope_change_distribution'` | All randomized slope changes (matrix of size `nr` x `kmax-1`). |
 | `'pv_thres_list'` | List of $p$-value quantiles found across the $q_{\text{sig}}$ repetitions. |
-| `'p_sig_thres'` | The final, minimum adaptive p-value threshold ($p_{\text{th}}$) calculated from the `pv_thres_list`. |
+| `'p_sig_thres'` | The final, minimum adaptive p-value threshold ($p_{\text{sig}}$) calculated from the `pv_thres_list`. |
 
 
 ### `plot_Elbow_significance_general_results(results)`
@@ -162,9 +166,9 @@ Generates a three-panel plot visualization of the Elbow Significance Test result
 
 | Panel | Content | Description |
 | :---: | :--- | :--- |
-| **Top** | **Total Heterogeneity vs. $K$** | Plots the raw "inertia-like" curve (Total heterogeneity) for the data against the number of clusters ($K$). |
-| **Middle** | **Slope Change $\delta_k$ vs. $K$** | Compares the $\delta_k$ statistic for the real data (`Data`) against the $100(1-p_{\text{th}})$ **Percentile** curve derived from the randomized null data. Significant $K$ values are where the `Data` curve is above the `Random` curve. |
-| **Bottom** | **P-Value vs. $K$** | Plots the empirical p-values for each $K$ against the constant **adaptive threshold** $p_{\text{th}}$ (calculated via the bootstrapped permutation test). Significant $K$ values are where the p-value is **below** the dashed red line $p_{\text{th}}$. |
+| **Top** | **Total Heterogeneity vs. $k$** | Plots the raw "inertia-like" curve (Total heterogeneity) for the data against the number of clusters ($K$). |
+| **Middle** | **Elbow statistic $\delta_k$ vs. $k$** | Compares the $\delta_k$ statistic for the real data (`Data`) against the $100(1-p_{\text{sig}})$ **Percentile** curve derived from the randomized null data. Significant $K$ values are where the `Data` curve is above the `Random` curve. |
+| **Bottom** | **P-Value vs. $k$** | Plots the empirical p-values for each $K$ against the constant **adaptive threshold** $p_{\text{sig}}$ (calculated via the bootstrapped permutation test). Significant $K$ values are where the p-value is **below** the dashed red line $p_{\text{sig}}$. |
 
 ### `compare_slope_changes_scatter_results(results)`
 
@@ -184,7 +188,7 @@ This plot visually demonstrates the basis for the significance test by showing h
 | :--- | :--- | :--- |
 | **Randomized Null Data** | Gray, semi-transparent scatter points | Represents the $\delta_k$ values for *each* of the `nr` random reference datasets, forming the **null distribution** for every tested $K$. |
 | **Observed $\delta_k$ statistic** | Blue line with circles | Shows the actual $\delta_k$ values derived from the original dataset. Points lying significantly above the gray cloud indicate strong evidence of structure. |
-| **Reference $\delta_k$ statistic threshold** | Orange line with squares | Plots the $100 \times (1-p_{\text{th}})$ Percentile curve. This is the critical threshold: if the blue line (Data) is above the orange line, the corresponding $K$ is considered statistically significant. |
+| **Reference $\delta_k$ statistic threshold** | Orange line with squares | Plots the $100 \times (1-p_{\text{sig}})$ Percentile curve. This is the critical threshold: if the blue line (Data) is above the orange line, the corresponding $K$ is considered statistically significant. |
 
 
 ### `visualize_agglomerative_clustering(data, kcluster)`
@@ -211,7 +215,7 @@ Performs and plots the results of **Agglomerative Clustering** on a dataset. Thi
 * A Matplotlib figure displayed to the screen showing the data points colored by cluster.
 * **Returns:** A tuple containing: `(labels, clustering_object)`.
 
-### `compute_gap_statistic(data0, max_k, n_refs=10, cluster_method="KMeans")`
+### `compute_gap_statistic(data0, max_k, n_refs=10, cluster_method="KMeans", random_data_func=data_random, plot=True)`
 
 Computes the Gap Statistic and its associated standard deviation ($s_k$) for a range of cluster numbers ($K=1$ to $K_{\text{max}}$). The function also determines the optimal $K$ using two common criteria and optionally plots the results.
 **Input Parameters:**
@@ -222,6 +226,7 @@ Computes the Gap Statistic and its associated standard deviation ($s_k$) for a r
 | `max_k` | `int` | N/A | The maximum number of clusters to evaluate. |
 | `n_refs` | `int` | `10` | The number of reference (null) datasets to generate for the comparison. |
 | `cluster_method` | `str` | `"KMeans"` | The clustering algorithm to use. Must be `"KMeans"` or `"Agglomerate"`. |
+| `random_data_func` | The function used to generate the unstructured null hypothesis data (e.g., data_random_pca_aligned for a PCA-aligned null). |
 | `plot` | `bool` | `True` | If `True`, generates and displays a plot of the Gap Statistic with error bars and optimal $K$ markers. |
 
 **Core Process:**
