@@ -55,7 +55,21 @@ def FCM_Heterogeneity(X, k, random_state=42,pars=[2, 0.005, 1000]):
         X_T, c=k, m=pars[0], error=pars[1], maxiter=pars[2], init=None, seed=random_state
     )
     # jm is the objective function J_m, analogous to inertia
-    return jm[-1]  # final iteration's objective value
+    return jm[-1] #/ X.shape[0]  # final iteration's objective value
+
+import skfuzzy as fuzz
+def FCM_HeterogeneityScaled(X, k, random_state=42,pars=[2, 0.005, 1000]):
+    X = np.asarray(X)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    X_T = X_scaled.T
+    cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(
+        X_T, c=k, m=pars[0], error=pars[1], maxiter=pars[2], init=None, seed=random_state
+    )
+    # jm is the objective function J_m, analogous to inertia
+    return jm[-1]/(k**(1-pars[0])) #/ X.shape[0]  # final iteration's objective value
+
+
 
 # Gaussian Mixture Model Heterogeneity
 # pars: [covariance_type]  (covariance_type{‘full’, ‘tied’, ‘diag’, ‘spherical’}, default=’full’)
@@ -568,7 +582,7 @@ def compute_gap_statistic(data0, max_k, n_refs=10, cluster_method="KMeans", rand
 
         plt.figure(figsize=(8, 4))
         plt.errorbar(k_values, np.array(gap_values), yerr=sk_values, fmt='-o', capsize=5, label='Gap Statistic')
-        plt.axvline(x=optimal_k_tibshirani, color='green', linestyle='--', label=f'Optimal k (Original)= {optimal_k_tibshirani}')
+        plt.axvline(x=optimal_k_tibshirani, color='green', linestyle='-.', label=f'Optimal k (Original)= {optimal_k_tibshirani}')
         plt.axvline(x=optimal_k_max_gap, color='red', linestyle='--', label=f'Optimal k (max)= {optimal_k_max_gap}')
         plt.title('Gap Statistic vs Number of Clusters', fontsize=LABEL_FONT_SIZE)
         plt.xlabel('$k$', fontsize=LABEL_FONT_SIZE)
