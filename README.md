@@ -29,11 +29,28 @@ Other algorithms can be implemented by the user defining an appropriate function
 
 ---
 
-## 3. Dependencies
+## 3. Installation
+
+Install from source (recommended):
 
 ```bash
-pip install numpy matplotlib scikit-learn scikit-fuzzy
+pip install .
 ```
+
+or install dependencies directly:
+
+```bash
+pip install -r requirements.txt
+```
+
+Required runtime dependencies:
+
+- `numpy`
+- `matplotlib`
+- `scikit-learn`
+- `scikit-fuzzy`
+- `pandas`
+- `statsmodels`
 
 ---
 
