@@ -12,7 +12,7 @@ The implementation supports multiple popular clustering algorithms (option `hete
 - **Fuzzy C-Means (FCM)**
 - **Gaussian Mixture Models (GMM)**
 
-Other algorithms can be implemented by the user defining an appropriate function to calculate the heterogeneity of a clustering. 
+Other algorithms can be implemented by the user defining an appropriate function to calculate the heterogeneity of a data partition. 
 
 **Associated manuscript:**
 
@@ -277,6 +277,7 @@ The function generates two plots to fully illustrate the Gap Statistic analysis.
 1. WCSS and Expected WCSS Plot. This plot shows the raw components used to calculate the Gap Statistic: The logarithm of the Within-Cluster Sum of Squares for the real dataset, illustrating the "Elbow" curve vs. the expected log-WCSS under the null hypothesis (average log-WCSS of the random reference datasets).
 
 2. Gap Statistic Plot. This plot shows the final metric with the criteria used for selection.
+
 
 
 
